@@ -1,3 +1,18 @@
 spring:
   application:
     name: rateguard
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+rateguard:
+  clients:
+    - client-id: demo-client
+      api-key: dev-demo-key-change-me
+      policy-id: standard
+  policies:
+    - policy-id: standard
+      capacity: 10
+      refill-tokens: 10
+      refill-period-millis: 60000

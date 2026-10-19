@@ -4,7 +4,6 @@ import com.example.rateguard.config.RateLimitConfig;
 import com.example.rateguard.exception.InvalidApiKeyException;
 import com.example.rateguard.model.RateLimitDecision;
 import com.example.rateguard.model.RateLimitPolicy;
-import com.example.rateguard.repository.RateLimitStore;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,15 +11,15 @@ public class RateLimitService {
 
     private final ClientResolver clientResolver;
     private final PolicyProvider policyProvider;
-    private final RateLimitStore rateLimitStore;
+    private final RateLimiter rateLimiter;
 
     public RateLimitService(
             ClientResolver clientResolver,
             PolicyProvider policyProvider,
-            RateLimitStore rateLimitStore) {
+            RateLimiter rateLimiter) {
         this.clientResolver = clientResolver;
         this.policyProvider = policyProvider;
-        this.rateLimitStore = rateLimitStore;
+        this.rateLimiter = rateLimiter;
     }
 
     public RateLimitDecision check(String apiKey) {
@@ -32,13 +31,10 @@ public class RateLimitService {
         RateLimitPolicy policy = policyProvider
                 .resolve(client.getPolicyId())
                 .orElseThrow(() ->
-                        new IllegalStateException("Configured policy not found"));
+                        new IllegalStateException(
+                                "Configured policy not found"
+                        ));
 
-        return rateLimitStore.checkAndConsume(
-                client.getClientId(),
-                policy.getCapacity(),
-                policy.getRefillTokens(),
-                policy.getRefillPeriodSeconds() * 1000L
-        );
+        return rateLimiter.check(client.getClientId(), policy);
     }
 }
